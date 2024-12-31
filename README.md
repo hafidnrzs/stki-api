@@ -1,24 +1,26 @@
-# STKI API
+# STKI Backend
 
-Project ini adalah Flask API yang mengambil berita dari dataset yang disimpan dalam file CSV.
+Repository ini adalah backend dan API menggunakan Flask yang mengambil berita dari dataset yang disimpan dalam file CSV.
 
 ## Cara install
 
 1. Clone repository
 
 2. Install dependency
-    ```
-    pip install -r requirements.txt
-    ```
 
-3. Download dataset dari https://www.kaggle.com/datasets/iqbalmaulana/indonesian-news-dataset dan pindahkan file CSV pada `data/data.csv`
+   ```
+   pip install -r requirements.txt
+   ```
+
+3. Download dataset dari https://www.kaggle.com/datasets/iqbalmaulana/indonesian-news-dataset dan pindahkan file CSV ke `data/data.csv`
 
 4. Jalankan aplikasi Flask
-    ```
-    python app.py
-    ```
 
-4. Akses API di `http://127.0.0.1:5000/news?page=1` untuk mendapatkan halaman pertama dari berita
+   ```
+   python app.py
+   ```
+
+5. Akses API di `http://127.0.0.1:5000/news?page=1` untuk mendapatkan halaman pertama dari berita
 
 ## Pagination
 
