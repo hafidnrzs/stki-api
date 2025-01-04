@@ -1,11 +1,13 @@
 from flask import Flask, jsonify, request
 import pandas as pd
+from search import search_documents, index_csv
 
 app = Flask(__name__)
 
 # Load dataset
 data_file = 'data/news.csv'
 news_data = pd.read_csv(data_file)
+index_csv(data_file)
 
 @app.route('/news', methods=['GET'])
 def get_news():
@@ -31,6 +33,14 @@ def get_news():
         'total': len(filtered_news),
         'news': paginated_news
     })
+
+@app.route('/search', methods=['GET'])
+def search():
+    query = request.args.get('q', default='', type=str)
+    results = []
+    if query:
+        results = search_documents(query)[:100]  # Limit to 100 results
+    return jsonify(results)
 
 if __name__ == '__main__':
     app.run(debug=True)
