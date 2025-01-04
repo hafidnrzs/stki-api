@@ -1,5 +1,6 @@
 # filepath: /E:/stki-backend/app.py
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 import pandas as pd
 from search import search_documents, index_csv
 from dotenv import load_dotenv
@@ -10,6 +11,7 @@ import psutil
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
 
 # Load configuration based on FLASK_ENV
 if os.getenv('FLASK_ENV') == 'production':
