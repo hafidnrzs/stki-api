@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import pandas as pd
-from search import search_documents, index_db
+from search import search_documents
 from dotenv import load_dotenv
 import os
 from sqlalchemy import create_engine
@@ -91,6 +91,5 @@ def search_news():
     })
 
 if __name__ == '__main__':
-    index_db()
     port = int(os.getenv('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
