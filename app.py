@@ -5,11 +5,13 @@ from search import search_documents, index_csv
 from dotenv import load_dotenv
 import os
 import psutil
+from flask_cors import CORS
 
 # Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
 
 # Load configuration based on FLASK_ENV
 if os.getenv('FLASK_ENV') == 'production':
@@ -74,6 +76,15 @@ def memory():
     process = psutil.Process()
     memory_usage = process.memory_info().rss / (1024 * 1024)  # dalam MB
     return jsonify({'memory_usage_mb': memory_usage})
+
+@app.route('/news/<int:news_id>', methods=['GET'])
+def get_news_by_id(news_id):
+    news_item = news_data[news_data['id'] == news_id]
+    
+    if not news_item.empty:
+        return jsonify(news_item.iloc[0].to_dict())
+    else:
+        return jsonify({'error': 'News item not found'}), 404
 
 if __name__ == '__main__':
     app.run()
