@@ -1,1 +1,0 @@
-indexdir untuk search engine dari Whoosh
