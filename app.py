@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import pandas as pd
-from search import search_documents
+from search import search_documents, index_db
 from dotenv import load_dotenv
 import os
 from sqlalchemy import create_engine
@@ -68,6 +68,25 @@ def get_news_by_id(id):
     
     return jsonify(news_data.to_dict(orient='records')[0])
 
+@app.route('/search', methods=['GET'])
+def search_news():
+    query = request.args.get('q', default='', type=str)
+    page = request.args.get('page', default=1, type=int)
+    per_page = 12
+    
+    if not query:
+        return jsonify({'error': 'Query parameter is required'}), 400
+    
+    news_data = search_documents(query, page, per_page)
+    
+    return jsonify({
+        'page': page,
+        'per_page': per_page,
+        'total_results': len(news_data),
+        'news': news_data.to_dict(orient='records')
+    })
+
 if __name__ == '__main__':
+    index_db()
     port = int(os.getenv('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
