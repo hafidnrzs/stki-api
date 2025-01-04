@@ -4,7 +4,7 @@ import pandas as pd
 from search import search_documents
 from dotenv import load_dotenv
 import os
-import sqlite3
+from sqlalchemy import create_engine
 
 # Load environment variables from .env file
 load_dotenv()
@@ -12,12 +12,14 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-db_file = os.getenv('DB_FILE')
+db_url = os.getenv('DB_URL')
+
+# Create PostgreSQL connection
+engine = create_engine(db_url)
 
 def get_news_data():
-    conn = sqlite3.connect(db_file)
-    news_data = pd.read_sql_query('SELECT * FROM news', conn)
-    conn.close()
+    with engine.connect() as conn:
+        news_data = pd.read_sql_query('SELECT * FROM news', conn)
     return news_data
 
 @app.route('/news', methods=['GET'])
@@ -29,53 +31,24 @@ def get_news():
     
     # Get category from query parameters
     category = request.args.get('category', default=None, type=str)
-
-    # Load dataset dynamically
-    news_data = get_news_data()
-
-    # Filter news data by category if provided
-    if category:
-        filtered_news = news_data[news_data['category'].str.lower() == category.lower()]
-    else:
-        filtered_news = news_data
-
-    paginated_news = filtered_news[start:end].to_dict(orient='records')
     
-    return jsonify({
-        'page': page,
-        'per_page': per_page,
-        'total': len(filtered_news),
-        'news': paginated_news
-    })
-
-@app.route('/search', methods=['GET'])
-def search():
-    query = request.args.get('q', default='', type=str)
-    page = request.args.get('page', default=1, type=int)
-    per_page = 10
-    start = (page - 1) * per_page
-    end = start + per_page
-
-    results = search_documents(query, db_file)
-    total_results = len(results)
-    paginated_results = results[start:end]
-
+    # Fetch news data
+    news_data = get_news_data()
+    
+    # Filter by category if provided
+    if category:
+        news_data = news_data[news_data['category'] == category]
+    
+    # Paginate results
+    total_results = len(news_data)
+    paginated_data = news_data.iloc[start:end]
+    
     return jsonify({
         'page': page,
         'per_page': per_page,
         'total': total_results,
-        'news': paginated_results
+        'news': paginated_data.to_dict(orient='records')
     })
-
-@app.route('/news/<int:news_id>', methods=['GET'])
-def get_news_by_id(news_id):
-    news_data = get_news_data()
-    news_item = news_data[news_data['id'] == news_id]
-    
-    if not news_item.empty:
-        return jsonify(news_item.iloc[0].to_dict())
-    else:
-        return jsonify({'error': 'News item not found'}), 404
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 10000))
