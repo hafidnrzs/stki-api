@@ -72,17 +72,21 @@ def get_news_by_id(id):
 def search_news():
     query = request.args.get('q', default='', type=str)
     page = request.args.get('page', default=1, type=int)
-    per_page = 12
+    per_page = request.args.get('per_page', default=12, type=int)
     
     if not query:
         return jsonify({'error': 'Query parameter is required'}), 400
     
-    news_data = search_documents(query, page, per_page)
+    news_data, total_results = search_documents(query, page, per_page)
+    
+    # Calculate total pages
+    total_pages = (total_results + per_page - 1) // per_page
     
     return jsonify({
         'page': page,
         'per_page': per_page,
-        'total_results': len(news_data),
+        'total_results': total_results,
+        'total_pages': total_pages,
         'news': news_data.to_dict(orient='records')
     })
 

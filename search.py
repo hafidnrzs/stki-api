@@ -55,14 +55,15 @@ def search_documents(query_string, page=1, per_page=10):
     with ix.searcher() as searcher:
         query = QueryParser('content', ix.schema).parse(query_string)
         results = searcher.search(query, limit=None)
+        total_results = len(results)
         result_ids = [result['id'] for result in results[offset:offset + per_page]]
     
     if not result_ids:
-        return pd.DataFrame()
+        return pd.DataFrame(), total_results
     
     # Load the PostgreSQL database to match the ids
     query = text('SELECT * FROM news WHERE id IN :ids')
     with engine.connect() as conn:
         news_data = pd.read_sql_query(query, conn, params={'ids': tuple(result_ids)})
     
-    return news_data
+    return news_data, total_results
