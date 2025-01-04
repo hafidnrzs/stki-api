@@ -1,11 +1,17 @@
+# filepath: /E:/stki-backend/app.py
 from flask import Flask, jsonify, request
 import pandas as pd
 from search import search_documents, index_csv
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 
 # Load dataset
-data_file = 'data/news.csv'
+data_file = os.getenv('DATA_FILE')
 news_data = pd.read_csv(data_file)
 index_csv(data_file)
 
