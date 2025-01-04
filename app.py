@@ -37,10 +37,21 @@ def get_news():
 @app.route('/search', methods=['GET'])
 def search():
     query = request.args.get('q', default='', type=str)
-    results = []
-    if query:
-        results = search_documents(query)[:100]  # Limit to 100 results
-    return jsonify(results)
+    page = request.args.get('page', default=1, type=int)
+    per_page = 10
+    start = (page - 1) * per_page
+    end = start + per_page
+
+    results = search_documents(query, data_file)
+    total_results = len(results)
+    paginated_results = results[start:end]
+
+    return jsonify({
+        'page': page,
+        'per_page': per_page,
+        'total': total_results,
+        'news': paginated_results
+    })
 
 if __name__ == '__main__':
     app.run(debug=True)
