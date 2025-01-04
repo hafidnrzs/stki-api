@@ -4,11 +4,20 @@ import pandas as pd
 from search import search_documents, index_csv
 from dotenv import load_dotenv
 import os
+import psutil
 
 # Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__)
+
+# Load configuration based on FLASK_ENV
+if os.getenv('FLASK_ENV') == 'production':
+    app.config['DEBUG'] = False
+    app.config['ENV'] = 'production'
+else:
+    app.config['DEBUG'] = True
+    app.config['ENV'] = 'development'
 
 # Load dataset
 data_file = os.getenv('DATA_FILE')
@@ -59,5 +68,12 @@ def search():
         'news': paginated_results
     })
 
+@app.route('/memory')
+def memory():
+    # Mendapatkan penggunaan memori saat ini
+    process = psutil.Process()
+    memory_usage = process.memory_info().rss / (1024 * 1024)  # dalam MB
+    return jsonify({'memory_usage_mb': memory_usage})
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
