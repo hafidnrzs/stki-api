@@ -19,7 +19,7 @@ def get_news():
 
     # Filter news data by category if provided
     if category:
-        filtered_news = news_data[news_data['category'] == category]
+        filtered_news = news_data[news_data['category'].str.lower() == category.lower()]
     else:
         filtered_news = news_data
 
