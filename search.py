@@ -5,6 +5,7 @@ from whoosh.qparser import QueryParser
 import os
 from dotenv import load_dotenv
 import shutil
+import sqlite3
 
 # Load environment variables from .env file
 load_dotenv()
@@ -37,20 +38,24 @@ def add_documents(documents):
         writer.add_document(id=doc_id, title=title, content=content)
     writer.commit()
 
-def index_csv(file_path):
-    df = pd.read_csv(file_path)
+def index_db(db_file):
+    conn = sqlite3.connect(db_file)
+    df = pd.read_sql_query('SELECT * FROM news', conn)
     df = df.head(5000) # Limit to 5000 documents for testing
     documents = [(str(row['id']), row['title'], row['content']) for _, row in df.iterrows()]
     add_documents(documents)
+    conn.close()
 
-def search_documents(query_string, csv_file_path):
+def search_documents(query_string, db_file):
     with ix.searcher() as searcher:
         query = QueryParser('content', ix.schema).parse(query_string)
         results = searcher.search(query)
         result_ids = [result['id'] for result in results]
 
-    # Load the CSV file to match the ids
-    df = pd.read_csv(csv_file_path)
-    matched_rows = df[df['id'].astype(str).isin(result_ids)]
+    # Load the SQLite database to match the ids
+    conn = sqlite3.connect(db_file)
+    query = 'SELECT * FROM news WHERE id IN ({})'.format(','.join('?' * len(result_ids)))
+    df = pd.read_sql_query(query, conn, params=result_ids)
+    conn.close()
 
-    return matched_rows.to_dict(orient='records')
+    return df.to_dict(orient='records')

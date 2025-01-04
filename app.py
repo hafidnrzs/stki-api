@@ -1,9 +1,10 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import pandas as pd
-from search import search_documents, index_csv
+from search import search_documents, index_db
 from dotenv import load_dotenv
 import os
+import sqlite3
 
 # Load environment variables from .env file
 load_dotenv()
@@ -11,18 +12,12 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-# Load configuration based on FLASK_ENV
-if os.getenv('FLASK_ENV') == 'production':
-    app.config['DEBUG'] = False
-    app.config['ENV'] = 'production'
-else:
-    app.config['DEBUG'] = True
-    app.config['ENV'] = 'development'
-
 # Load dataset
-data_file = os.getenv('DATA_FILE')
-news_data = pd.read_csv(data_file)
-index_csv(data_file)
+db_file = os.getenv('DB_FILE')
+conn = sqlite3.connect(db_file)
+news_data = pd.read_sql_query('SELECT * FROM news', conn)
+conn.close()
+index_db(db_file)
 
 @app.route('/news', methods=['GET'])
 def get_news():
@@ -57,7 +52,7 @@ def search():
     start = (page - 1) * per_page
     end = start + per_page
 
-    results = search_documents(query, data_file)
+    results = search_documents(query, db_file)
     total_results = len(results)
     paginated_results = results[start:end]
 
