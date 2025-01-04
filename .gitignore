@@ -1,3 +1,4 @@
 data/data.csv
 indexdir/
 .env
+__pycache__/
