@@ -1,16 +1,14 @@
-import pandas as pd
 from sqlalchemy import create_engine, text
-from dotenv import load_dotenv
+import pandas as pd
 import os
+from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
 
-# Buat koneksi PostgreSQL
 db_url = os.getenv('DB_URL')
 engine = create_engine(db_url)
 
-def search_documents(query_string, page=1, per_page=10):
+def search_documents(query_string, page, per_page):
     """
     Fungsi untuk mencari dokumen dalam database PostgreSQL berdasarkan query_string.
     
@@ -25,18 +23,18 @@ def search_documents(query_string, page=1, per_page=10):
     """
     offset = (page - 1) * per_page
     
-    # Gunakan PostgreSQL untuk mencari dokumen
+    # Gunakan PostgreSQL untuk mencari dokumen dengan full-text search
     search_query = text("""
         SELECT *, COUNT(*) OVER() AS total_count
         FROM news
-        WHERE content ILIKE :query_string
+        WHERE content_tsv @@ to_tsquery(:query_string)
         ORDER BY id
         LIMIT :per_page OFFSET :offset
     """)
     
     with engine.connect() as conn:
         news_data = pd.read_sql_query(search_query, conn, params={
-            'query_string': f'%{query_string}%',
+            'query_string': query_string,
             'per_page': per_page,
             'offset': offset
         })
