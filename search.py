@@ -6,14 +6,26 @@ import os
 # Load environment variables from .env file
 load_dotenv()
 
-# Create PostgreSQL connection
+# Buat koneksi PostgreSQL
 db_url = os.getenv('DB_URL')
 engine = create_engine(db_url)
 
 def search_documents(query_string, page=1, per_page=10):
+    """
+    Fungsi untuk mencari dokumen dalam database PostgreSQL berdasarkan query_string.
+    
+    Parameters:
+    query_string (str): Kata kunci pencarian.
+    page (int): Nomor halaman untuk pagination.
+    per_page (int): Jumlah hasil per halaman.
+    
+    Returns:
+    pd.DataFrame: DataFrame yang berisi hasil pencarian.
+    int: Total jumlah hasil pencarian.
+    """
     offset = (page - 1) * per_page
     
-    # Use PostgreSQL to search documents
+    # Gunakan PostgreSQL untuk mencari dokumen
     search_query = text("""
         SELECT *, COUNT(*) OVER() AS total_count
         FROM news

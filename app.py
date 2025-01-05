@@ -15,10 +15,22 @@ CORS(app)
 
 db_url = os.getenv('DB_URL')
 
-# Create PostgreSQL connection
+# Buat koneksi PostgreSQL
 engine = create_engine(db_url)
 
 def get_news_data(page, per_page, category=None):
+    """
+    Fungsi untuk mendapatkan data berita dari database PostgreSQL dengan pagination.
+    
+    Parameters:
+    page (int): Nomor halaman untuk pagination.
+    per_page (int): Jumlah hasil per halaman.
+    category (str): Kategori berita (opsional).
+    
+    Returns:
+    pd.DataFrame: DataFrame yang berisi data berita.
+    int: Total jumlah hasil berita.
+    """
     offset = (page - 1) * per_page
     base_query = 'SELECT *, COUNT(*) OVER() AS total_count FROM news'
     
@@ -38,14 +50,24 @@ def get_news_data(page, per_page, category=None):
 
 @app.route('/news', methods=['GET'])
 def get_news():
+    """
+    Endpoint untuk mendapatkan data berita dengan pagination.
+    
+    Query Parameters:
+    page (int): Nomor halaman (default: 1).
+    category (str): Kategori berita (opsional).
+    
+    Returns:
+    JSON: Data berita dalam format JSON.
+    """
     page = request.args.get('page', default=1, type=int)
     per_page = 12
     category = request.args.get('category', default=None, type=str)
     
-    # Fetch news data with pagination and total count
+    # Ambil data berita dengan pagination dan total count
     news_data, total_results = get_news_data(page, per_page, category)
     
-    # Calculate total pages
+    # Hitung total halaman
     total_pages = (total_results + per_page - 1) // per_page
     
     return jsonify({
@@ -58,6 +80,15 @@ def get_news():
 
 @app.route('/news/<int:id>', methods=['GET'])
 def get_news_by_id(id):
+    """
+    Endpoint untuk mendapatkan data berita berdasarkan ID.
+    
+    Path Parameters:
+    id (int): ID berita.
+    
+    Returns:
+    JSON: Data berita dalam format JSON.
+    """
     query = 'SELECT * FROM news WHERE id = :id'
     
     with engine.connect() as conn:
@@ -70,6 +101,17 @@ def get_news_by_id(id):
 
 @app.route('/search', methods=['GET'])
 def search_news():
+    """
+    Endpoint untuk mencari berita berdasarkan query string.
+    
+    Query Parameters:
+    q (str): Kata kunci pencarian.
+    page (int): Nomor halaman (default: 1).
+    per_page (int): Jumlah hasil per halaman (default: 12).
+    
+    Returns:
+    JSON: Hasil pencarian berita dalam format JSON.
+    """
     query = request.args.get('q', default='', type=str)
     page = request.args.get('page', default=1, type=int)
     per_page = request.args.get('per_page', default=12, type=int)
@@ -79,7 +121,7 @@ def search_news():
     
     news_data, total_results = search_documents(query, page, per_page)
     
-    # Calculate total pages
+    # Hitung total halaman
     total_pages = (total_results + per_page - 1) // per_page
     
     return jsonify({
